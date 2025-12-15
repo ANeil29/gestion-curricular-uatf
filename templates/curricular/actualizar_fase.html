@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+
+{% block title %}Actualizar Fase - {{ seguimiento.fase.nombre }}{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'curricular:dashboard' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'curricular:detalle_rediseño' seguimiento.rediseño.id %}">{{ seguimiento.rediseño.carrera.nombre }}</a></li>
+            <li class="breadcrumb-item active">Actualizar Fase</li>
+        </ol>
+    </nav>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-edit"></i> Actualizar: {{ seguimiento.fase.nombre }}
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info mb-4">
+                    <strong>Carrera:</strong> {{ seguimiento.rediseño.carrera.nombre }}<br>
+                    <strong>Fase:</strong> {{ seguimiento.fase.numero }}. {{ seguimiento.fase.nombre }} ({{ seguimiento.fase.codigo }})
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            {{ form.completado }}
+                            <label class="form-check-label" for="{{ form.completado.id_for_label }}">
+                                <strong>Marcar como completado</strong>
+                            </label>
+                        </div>
+                        {% if form.completado.errors %}
+                            <div class="text-danger mt-1">{{ form.completado.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.fecha_inicio.id_for_label }}" class="form-label">
+                                <i class="fas fa-calendar-alt"></i> Fecha de Inicio
+                            </label>
+                            {{ form.fecha_inicio }}
+                            {% if form.fecha_inicio.errors %}
+                                <div class="text-danger mt-1">{{ form.fecha_inicio.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.fecha_conclusion.id_for_label }}" class="form-label">
+                                <i class="fas fa-calendar-check"></i> Fecha de Conclusión
+                            </label>
+                            {{ form.fecha_conclusion }}
+                            {% if form.fecha_conclusion.errors %}
+                                <div class="text-danger mt-1">{{ form.fecha_conclusion.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.medio_verificacion.id_for_label }}" class="form-label">
+                            <i class="fas fa-check-circle"></i> Medio de Verificación
+                        </label>
+                        {{ form.medio_verificacion }}
+                        <small class="form-text text-muted">
+                            Ejemplo: Dictamen del Consejo de Carrera, Actas firmadas, Documentos entregados, etc.
+                        </small>
+                        {% if form.medio_verificacion.errors %}
+                            <div class="text-danger mt-1">{{ form.medio_verificacion.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-4">
+                        <label for="{{ form.observaciones.id_for_label }}" class="form-label">
+                            <i class="fas fa-comment"></i> Observaciones
+                        </label>
+                        {{ form.observaciones }}
+                        {% if form.observaciones.errors %}
+                            <div class="text-danger mt-1">{{ form.observaciones.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save"></i> Guardar Cambios
+                        </button>
+                        <a href="{% url 'curricular:detalle_rediseño' seguimiento.rediseño.id %}" 
+                           class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-info-circle"></i> Información</h6>
+            </div>
+            <div class="card-body">
+                <p class="mb-2"><strong>Código de Fase:</strong> {{ seguimiento.fase.codigo }}</p>
+                <p class="mb-2"><strong>Orden:</strong> {{ seguimiento.fase.numero }} de 12</p>
+                <p class="mb-2"><strong>Última actualización:</strong><br>
+                    {{ seguimiento.actualizado_el|date:"d/m/Y H:i" }}
+                </p>
+                {% if seguimiento.actualizado_por %}
+                    <p class="mb-0"><strong>Actualizado por:</strong><br>
+                        {{ seguimiento.actualizado_por.get_full_name|default:seguimiento.actualizado_por.username }}
+                    </p>
+                {% endif %}
+            </div>
+        </div>
+
+        {% if seguimiento.fase.codigo == 'CA' %}
+        <div class="card mt-3">
+            <div class="card-body">
+                <h6 class="mb-3"><i class="fas fa-paperclip"></i> Archivos</h6>
+                <p class="small text-muted mb-3">
+                    Esta fase permite subir archivos de la Comisión Académica.
+                </p>
+                <a href="{% url 'curricular:subir_archivo_ca' seguimiento.id %}" 
+                   class="btn btn-sm btn-primary w-100">
+                    <i class="fas fa-upload"></i> Gestionar Archivos
+                </a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

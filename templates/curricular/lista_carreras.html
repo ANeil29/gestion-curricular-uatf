@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+
+{% block title %}Mi Perfil - UATF{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-user"></i> Mi Perfil</h5>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="text-muted mb-1">Nombre Completo</label>
+                        <p class="fw-bold">{{ user.get_full_name|default:"-" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted mb-1">Usuario</label>
+                        <p class="fw-bold">{{ user.username }}</p>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="text-muted mb-1">Correo Electrónico</label>
+                        <p class="fw-bold">{{ user.email|default:"-" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted mb-1">Rol</label>
+                        <p><span class="badge bg-primary">{{ user.get_rol_display }}</span></p>
+                    </div>
+                </div>
+
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="text-muted mb-1">Teléfono</label>
+                        <p class="fw-bold">{{ user.telefono|default:"-" }}</p>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="text-muted mb-1">Cargo</label>
+                        <p class="fw-bold">{{ user.cargo|default:"-" }}</p>
+                    </div>
+                </div>
+
+                {% if user.facultad %}
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <label class="text-muted mb-1">Facultad</label>
+                        <p class="fw-bold">{{ user.facultad.nombre }}</p>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="row">
+                    <div class="col-md-12">
+                        <label class="text-muted mb-1">Fecha de Registro</label>
+                        <p class="fw-bold">{{ user.date_joined|date:"d/m/Y H:i" }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-shield-alt"></i> Permisos</h6>
+            </div>
+            <div class="card-body">
+                {% if user.is_superuser %}
+                    <div class="alert alert-success mb-2">
+                        <i class="fas fa-crown"></i> Superusuario
+                    </div>
+                {% endif %}
+                
+                {% if user.is_staff %}
+                    <div class="alert alert-info mb-2">
+                        <i class="fas fa-user-shield"></i> Acceso al Admin
+                    </div>
+                {% endif %}
+
+                {% if user.puede_editar %}
+                    <div class="alert alert-primary mb-2">
+                        <i class="fas fa-edit"></i> Puede editar fases
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-body text-center">
+                <i class="fas fa-user-circle fa-5x text-primary mb-3"></i>
+                <h5>{{ user.get_full_name|default:user.username }}</h5>
+                <p class="text-muted">{{ user.get_rol_display }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

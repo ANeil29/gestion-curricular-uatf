@@ -1,0 +1,124 @@
+{% extends 'base.html' %}
+
+{% block title %}Subir Archivo - Comisión Académica{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'curricular:dashboard' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'curricular:detalle_rediseño' seguimiento.rediseño.id %}">{{ seguimiento.rediseño.carrera.nombre }}</a></li>
+            <li class="breadcrumb-item active">Subir Archivo</li>
+        </ol>
+    </nav>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-upload"></i> Subir Archivo - Comisión Académica</h5>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <strong>Información:</strong> Estás subiendo un archivo para la fase de <strong>Comisión Académica</strong> 
+                    de la carrera <strong>{{ seguimiento.rediseño.carrera.nombre }}</strong>.
+                </div>
+
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3">
+                        <label for="{{ form.archivo.id_for_label }}" class="form-label">
+                            <i class="fas fa-file"></i> Seleccionar Archivo *
+                        </label>
+                        {{ form.archivo }}
+                        <small class="form-text text-muted">
+                            Formatos permitidos: PDF, Word, Excel, PowerPoint, TXT, ZIP, RAR. Tamaño máximo: 50MB
+                        </small>
+                        {% if form.archivo.errors %}
+                            <div class="text-danger mt-1">{{ form.archivo.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="{{ form.descripcion.id_for_label }}" class="form-label">
+                            <i class="fas fa-comment"></i> Descripción (Opcional)
+                        </label>
+                        {{ form.descripcion }}
+                        {% if form.descripcion.errors %}
+                            <div class="text-danger mt-1">{{ form.descripcion.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-upload"></i> Subir Archivo
+                        </button>
+                        <a href="{% url 'curricular:detalle_rediseño' seguimiento.rediseño.id %}" 
+                           class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Archivos existentes -->
+        {% if archivos_existentes %}
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-folder"></i> Archivos Existentes</h5>
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    {% for archivo in archivos_existentes %}
+                    <div class="list-group-item">
+                        <div class="d-flex w-100 justify-content-between align-items-center">
+                            <div>
+                                <h6 class="mb-1">
+                                    <i class="fas fa-file"></i> {{ archivo.nombre_original }}
+                                </h6>
+                                <p class="mb-1 text-muted small">
+                                    {{ archivo.tamaño_legible }} | Subido el {{ archivo.subido_el|date:"d/m/Y H:i" }}
+                                </p>
+                                {% if archivo.descripcion %}
+                                    <p class="mb-0 small"><strong>Descripción:</strong> {{ archivo.descripcion }}</p>
+                                {% endif %}
+                            </div>
+                            <div>
+                                <a href="{% url 'curricular:descargar_archivo_ca' archivo.id %}" 
+                                   class="btn btn-sm btn-primary" title="Descargar">
+                                    <i class="fas fa-download"></i>
+                                </a>
+                                <a href="{% url 'curricular:eliminar_archivo_ca' archivo.id %}" 
+                                   class="btn btn-sm btn-danger" title="Eliminar">
+                                    <i class="fas fa-trash"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-info-circle"></i> Instrucciones</h6>
+            </div>
+            <div class="card-body">
+                <ol class="mb-0">
+                    <li class="mb-2">Selecciona el archivo que deseas subir</li>
+                    <li class="mb-2">Opcionalmente, agrega una descripción</li>
+                    <li class="mb-2">Haz clic en "Subir Archivo"</li>
+                    <li class="mb-0">Podrás descargar o eliminar el archivo posteriormente</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

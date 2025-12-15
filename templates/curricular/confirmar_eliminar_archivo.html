@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block title %}Confirmar Eliminación{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6">
+        <div class="card border-danger">
+            <div class="card-header bg-danger text-white">
+                <h5 class="mb-0"><i class="fas fa-exclamation-triangle"></i> Confirmar Eliminación</h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-3">¿Estás seguro de que deseas eliminar el siguiente archivo?</p>
+                
+                <div class="alert alert-warning">
+                    <p class="mb-1"><strong>Archivo:</strong> {{ archivo.nombre_original }}</p>
+                    <p class="mb-1"><strong>Tamaño:</strong> {{ archivo.tamaño_legible }}</p>
+                    <p class="mb-1"><strong>Subido:</strong> {{ archivo.subido_el|date:"d/m/Y H:i" }}</p>
+                    {% if archivo.descripcion %}
+                        <p class="mb-0"><strong>Descripción:</strong> {{ archivo.descripcion }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-circle"></i> 
+                    <strong>Advertencia:</strong> Esta acción no se puede deshacer.
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash"></i> Sí, Eliminar
+                        </button>
+                        <a href="{% url 'curricular:detalle_rediseño' archivo.seguimiento.rediseño.id %}" 
+                           class="btn btn-secondary">
+                            <i class="fas fa-times"></i> Cancelar
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

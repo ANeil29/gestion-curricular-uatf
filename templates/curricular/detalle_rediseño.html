@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ rediseño.carrera.nombre }} - Rediseño Curricular{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'curricular:dashboard' %}">Dashboard</a></li>
+            <li class="breadcrumb-item"><a href="{% url 'curricular:lista_carreras' %}">Carreras</a></li>
+            <li class="breadcrumb-item active">{{ rediseño.carrera.nombre }}</li>
+        </ol>
+    </nav>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h4 class="mb-0"><i class="fas fa-graduation-cap"></i> {{ rediseño.carrera.nombre }}</h4>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>Sede:</strong> {{ rediseño.carrera.sede.nombre }}</p>
+                <p><strong>Facultad:</strong> {{ rediseño.carrera.facultad.nombre }}</p>
+                <p><strong>Grado Académico:</strong> {{ rediseño.carrera.get_grado_academico_display }}</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>Año del Rediseño:</strong> {{ rediseño.año }}</p>
+                <p><strong>Estado:</strong> 
+                    {% if rediseño.estado == 'en_proceso' %}
+                        <span class="badge bg-info">En Proceso</span>
+                    {% elif rediseño.estado == 'completado' %}
+                        <span class="badge bg-success">Completado</span>
+                    {% else %}
+                        <span class="badge bg-warning">Suspendido</span>
+                    {% endif %}
+                </p>
+                <p><strong>Progreso General:</strong></p>
+                <div class="progress" style="height: 30px;">
+                    <div class="progress-bar bg-success" role="progressbar" 
+                         style="width: {{ rediseño.progreso_porcentaje }}%"
+                         aria-valuenow="{{ rediseño.progreso_porcentaje }}" 
+                         aria-valuemin="0" aria-valuemax="100">
+                        <strong>{{ rediseño.progreso_porcentaje }}%</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Fases del Rediseño -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-list-check"></i> Fases del Rediseño Curricular</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th style="width: 5%;">#</th>
+                        <th style="width: 25%;">Fase</th>
+                        <th style="width: 10%;">Código</th>
+                        <th style="width: 15%;">Estado</th>
+                        <th style="width: 15%;">Fecha Inicio</th>
+                        <th style="width: 15%;">Fecha Conclusión</th>
+                        <th style="width: 15%;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for seguimiento in seguimientos %}
+                    <tr>
+                        <td>{{ seguimiento.fase.numero }}</td>
+                        <td><strong>{{ seguimiento.fase.nombre }}</strong></td>
+                        <td><span class="badge bg-secondary">{{ seguimiento.fase.codigo }}</span></td>
+                        <td>
+                            {% if seguimiento.completado %}
+                                <span class="badge bg-success"><i class="fas fa-check"></i> Completado</span>
+                            {% else %}
+                                <span class="badge bg-warning"><i class="fas fa-clock"></i> Pendiente</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ seguimiento.fecha_inicio|default:"No iniciado" }}</td>
+                        <td>{{ seguimiento.fecha_conclusion|default:"-" }}</td>
+                        <td>
+                            <div class="btn-group btn-group-sm" role="group">
+                                {% if user.puede_editar %}
+                                    <a href="{% url 'curricular:actualizar_fase' seguimiento.id %}" 
+                                       class="btn btn-outline-primary" title="Editar">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                {% endif %}
+                                
+                                {% if seguimiento.fase.codigo == 'CA' %}
+                                    <a href="{% url 'curricular:subir_archivo_ca' seguimiento.id %}" 
+                                       class="btn btn-outline-success" title="Subir Archivo">
+                                        <i class="fas fa-upload"></i>
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                    
+                    <!-- Mostrar archivos de Comisión Académica -->
+                    {% if seguimiento.fase.codigo == 'CA' and seguimiento.archivos.exists %}
+                    <tr class="bg-light">
+                        <td colspan="7">
+                            <div class="ms-4">
+                                <strong><i class="fas fa-paperclip"></i> Archivos adjuntos:</strong>
+                                <ul class="list-unstyled mt-2 mb-0">
+                                    {% for archivo in seguimiento.archivos.all %}
+                                    <li class="mb-2">
+                                        <i class="fas fa-file"></i> 
+                                        <strong>{{ archivo.nombre_original }}</strong>
+                                        <span class="text-muted">({{ archivo.tamaño_legible }})</span>
+                                        {% if archivo.descripcion %}
+                                            <br><small class="text-muted ms-4">{{ archivo.descripcion }}</small>
+                                        {% endif %}
+                                        <div class="btn-group btn-group-sm ms-3" role="group">
+                                            <a href="{% url 'curricular:descargar_archivo_ca' archivo.id %}" 
+                                               class="btn btn-sm btn-outline-primary" title="Descargar">
+                                                <i class="fas fa-download"></i> Descargar
+                                            </a>
+                                            {% if user.puede_editar %}
+                                                <a href="{% url 'curricular:eliminar_archivo_ca' archivo.id %}" 
+                                                   class="btn btn-sm btn-outline-danger" title="Eliminar">
+                                                    <i class="fas fa-trash"></i>
+                                                </a>
+                                            {% endif %}
+                                        </div>
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% if rediseño.observaciones %}
+<div class="card mt-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-comment"></i> Observaciones Generales</h5>
+    </div>
+    <div class="card-body">
+        <p>{{ rediseño.observaciones }}</p>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
