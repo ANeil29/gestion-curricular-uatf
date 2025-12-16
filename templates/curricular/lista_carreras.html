@@ -1,100 +1,287 @@
 {% extends 'base.html' %}
 
-{% block title %}Mi Perfil - UATF{% endblock %}
+{% block title %}Lista de Carreras - UATF{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0"><i class="fas fa-user"></i> Mi Perfil</h5>
+<div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pb-2 mb-4 border-bottom">
+    <h1 class="h2"><i class="fas fa-book"></i> Carreras UATF</h1>
+    <div class="btn-toolbar mb-2 mb-md-0">
+        <a href="{% url 'curricular:generar_reporte_pdf' %}" class="btn btn-primary" target="_blank">
+            <i class="fas fa-file-pdf"></i> Generar Reporte
+        </a>
+    </div>
+</div>
+
+<!-- Filtros -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-filter"></i> Filtros de Búsqueda</h5>
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label"><i class="fas fa-map-marker-alt"></i> Sede</label>
+                <select name="sede" class="form-select">
+                    <option value="">Todas las sedes</option>
+                    {% for sede in sedes %}
+                        <option value="{{ sede.id }}" {% if request.GET.sede == sede.id|stringformat:"s" %}selected{% endif %}>
+                            {{ sede.nombre }}
+                        </option>
+                    {% endfor %}
+                </select>
             </div>
-            <div class="card-body">
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label class="text-muted mb-1">Nombre Completo</label>
-                        <p class="fw-bold">{{ user.get_full_name|default:"-" }}</p>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="text-muted mb-1">Usuario</label>
-                        <p class="fw-bold">{{ user.username }}</p>
-                    </div>
-                </div>
+            
+            <div class="col-md-4">
+                <label class="form-label"><i class="fas fa-university"></i> Facultad</label>
+                <select name="facultad" class="form-select">
+                    <option value="">Todas las facultades</option>
+                    {% for facultad in facultades %}
+                        <option value="{{ facultad.id }}" {% if request.GET.facultad == facultad.id|stringformat:"s" %}selected{% endif %}>
+                            {{ facultad.nombre }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="col-md-3">
+                <label class="form-label"><i class="fas fa-search"></i> Buscar Carrera</label>
+                <input type="text" name="buscar" class="form-control" placeholder="Nombre de carrera..." value="{{ request.GET.buscar }}">
+            </div>
+            
+            <div class="col-md-2 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="fas fa-search"></i> Buscar
+                </button>
+            </div>
+        </form>
+        
+        {% if request.GET.sede or request.GET.facultad or request.GET.buscar %}
+        <div class="mt-3">
+            <a href="{% url 'curricular:lista_carreras' %}" class="btn btn-sm btn-outline-secondary">
+                <i class="fas fa-times"></i> Limpiar Filtros
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
 
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label class="text-muted mb-1">Correo Electrónico</label>
-                        <p class="fw-bold">{{ user.email|default:"-" }}</p>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="text-muted mb-1">Rol</label>
-                        <p><span class="badge bg-primary">{{ user.get_rol_display }}</span></p>
-                    </div>
-                </div>
+<!-- Resumen de resultados -->
+<div class="alert alert-info d-flex justify-content-between align-items-center mb-4">
+    <span><i class="fas fa-info-circle"></i> <strong>Total de carreras encontradas:</strong> {{ page_obj.paginator.count }}</span>
+    {% if request.GET.sede or request.GET.facultad or request.GET.buscar %}
+        <span class="badge bg-primary">Filtros activos</span>
+    {% endif %}
+</div>
 
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label class="text-muted mb-1">Teléfono</label>
-                        <p class="fw-bold">{{ user.telefono|default:"-" }}</p>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="text-muted mb-1">Cargo</label>
-                        <p class="fw-bold">{{ user.cargo|default:"-" }}</p>
-                    </div>
-                </div>
+<!-- Lista de Carreras -->
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-list"></i> Listado de Carreras</h5>
+    </div>
+    <div class="card-body p-0">
+        {% if page_obj %}
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th style="width: 5%;">#</th>
+                            <th style="width: 30%;">Carrera</th>
+                            <th style="width: 15%;">Sede</th>
+                            <th style="width: 25%;">Facultad</th>
+                            <th style="width: 10%;">Grado</th>
+                            <th style="width: 10%;">Estado</th>
+                            <th style="width: 15%;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for carrera in page_obj %}
+                        <tr>
+                            <td class="text-center">
+                                <strong>{{ forloop.counter|add:page_obj.start_index|add:"-1" }}</strong>
+                            </td>
+                            <td>
+                                <strong class="text-primary">{{ carrera.nombre }}</strong>
+                            </td>
+                            <td>
+                                <i class="fas fa-map-marker-alt text-muted"></i> {{ carrera.sede.nombre }}
+                            </td>
+                            <td class="small">
+                                {{ carrera.facultad.nombre|truncatewords:8 }}
+                            </td>
+                            <td>
+                                {% if carrera.grado_academico == 'licenciatura' %}
+                                    <span class="badge bg-success">Licenciatura</span>
+                                {% elif carrera.grado_academico == 'tecnico_superior' %}
+                                    <span class="badge bg-info">Técnico Superior</span>
+                                {% else %}
+                                    <span class="badge bg-warning">Técnico Medio</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if carrera.activo %}
+                                    <span class="badge bg-success"><i class="fas fa-check"></i> Activa</span>
+                                {% else %}
+                                    <span class="badge bg-secondary"><i class="fas fa-times"></i> Inactiva</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if carrera.rediseños.exists %}
+                                    {% with ultimo_rediseño=carrera.rediseños.first %}
+                                        <a href="{% url 'curricular:detalle_rediseño' ultimo_rediseño.id %}" 
+                                           class="btn btn-sm btn-primary" title="Ver rediseño curricular">
+                                            <i class="fas fa-eye"></i> Ver Rediseño
+                                        </a>
+                                    {% endwith %}
+                                {% else %}
+                                    <span class="text-muted small">
+                                        <i class="fas fa-exclamation-circle"></i> Sin rediseño
+                                    </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
 
-                {% if user.facultad %}
-                <div class="row mb-3">
-                    <div class="col-md-12">
-                        <label class="text-muted mb-1">Facultad</label>
-                        <p class="fw-bold">{{ user.facultad.nombre }}</p>
-                    </div>
-                </div>
-                {% endif %}
+            <!-- Paginación -->
+            {% if page_obj.has_other_pages %}
+            <div class="card-footer bg-light">
+                <nav aria-label="Navegación de páginas">
+                    <ul class="pagination justify-content-center mb-0">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1{% if request.GET.sede %}&sede={{ request.GET.sede }}{% endif %}{% if request.GET.facultad %}&facultad={{ request.GET.facultad }}{% endif %}{% if request.GET.buscar %}&buscar={{ request.GET.buscar }}{% endif %}" aria-label="Primera">
+                                    <i class="fas fa-angle-double-left"></i>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if request.GET.sede %}&sede={{ request.GET.sede }}{% endif %}{% if request.GET.facultad %}&facultad={{ request.GET.facultad }}{% endif %}{% if request.GET.buscar %}&buscar={{ request.GET.buscar }}{% endif %}" aria-label="Anterior">
+                                    <i class="fas fa-angle-left"></i> Anterior
+                                </a>
+                            </li>
+                        {% endif %}
 
-                <div class="row">
-                    <div class="col-md-12">
-                        <label class="text-muted mb-1">Fecha de Registro</label>
-                        <p class="fw-bold">{{ user.date_joined|date:"d/m/Y H:i" }}</p>
-                    </div>
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                                <li class="page-item active" aria-current="page">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}{% if request.GET.sede %}&sede={{ request.GET.sede }}{% endif %}{% if request.GET.facultad %}&facultad={{ request.GET.facultad }}{% endif %}{% if request.GET.buscar %}&buscar={{ request.GET.buscar }}{% endif %}">
+                                        {{ num }}
+                                    </a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if request.GET.sede %}&sede={{ request.GET.sede }}{% endif %}{% if request.GET.facultad %}&facultad={{ request.GET.facultad }}{% endif %}{% if request.GET.buscar %}&buscar={{ request.GET.buscar }}{% endif %}" aria-label="Siguiente">
+                                    Siguiente <i class="fas fa-angle-right"></i>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.sede %}&sede={{ request.GET.sede }}{% endif %}{% if request.GET.facultad %}&facultad={{ request.GET.facultad }}{% endif %}{% if request.GET.buscar %}&buscar={{ request.GET.buscar }}{% endif %}" aria-label="Última">
+                                    <i class="fas fa-angle-double-right"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </nav>
+                
+                <div class="text-center mt-3">
+                    <small class="text-muted">
+                        Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }} 
+                        ({{ page_obj.start_index }}-{{ page_obj.end_index }} de {{ page_obj.paginator.count }} carreras)
+                    </small>
                 </div>
+            </div>
+            {% endif %}
+        {% else %}
+            <div class="card-body text-center py-5">
+                <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">No se encontraron carreras</h5>
+                <p class="text-muted mb-4">No hay carreras que coincidan con los filtros aplicados.</p>
+                <a href="{% url 'curricular:lista_carreras' %}" class="btn btn-primary">
+                    <i class="fas fa-redo"></i> Ver Todas las Carreras
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Información adicional -->
+<div class="row mt-4">
+    <div class="col-md-4">
+        <div class="card border-primary">
+            <div class="card-body text-center">
+                <i class="fas fa-graduation-cap fa-2x text-primary mb-2"></i>
+                <h5>{{ page_obj.paginator.count }}</h5>
+                <p class="text-muted mb-0">Total Carreras</p>
             </div>
         </div>
     </div>
-
     <div class="col-md-4">
-        <div class="card">
-            <div class="card-header">
-                <h6 class="mb-0"><i class="fas fa-shield-alt"></i> Permisos</h6>
-            </div>
-            <div class="card-body">
-                {% if user.is_superuser %}
-                    <div class="alert alert-success mb-2">
-                        <i class="fas fa-crown"></i> Superusuario
-                    </div>
-                {% endif %}
-                
-                {% if user.is_staff %}
-                    <div class="alert alert-info mb-2">
-                        <i class="fas fa-user-shield"></i> Acceso al Admin
-                    </div>
-                {% endif %}
-
-                {% if user.puede_editar %}
-                    <div class="alert alert-primary mb-2">
-                        <i class="fas fa-edit"></i> Puede editar fases
-                    </div>
-                {% endif %}
+        <div class="card border-success">
+            <div class="card-body text-center">
+                <i class="fas fa-map-marker-alt fa-2x text-success mb-2"></i>
+                <h5>{{ sedes.count }}</h5>
+                <p class="text-muted mb-0">Sedes UATF</p>
             </div>
         </div>
-
-        <div class="card mt-3">
+    </div>
+    <div class="col-md-4">
+        <div class="card border-info">
             <div class="card-body text-center">
-                <i class="fas fa-user-circle fa-5x text-primary mb-3"></i>
-                <h5>{{ user.get_full_name|default:user.username }}</h5>
-                <p class="text-muted">{{ user.get_rol_display }}</p>
+                <i class="fas fa-university fa-2x text-info mb-2"></i>
+                <h5>{{ facultades.count }}</h5>
+                <p class="text-muted mb-0">Facultades</p>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Leyenda de tipos de grado -->
+<div class="card mt-4">
+    <div class="card-body">
+        <h6 class="mb-3"><i class="fas fa-info-circle"></i> Tipos de Grado Académico:</h6>
+        <div class="row">
+            <div class="col-md-4">
+                <span class="badge bg-success me-2">Licenciatura</span>
+                <small class="text-muted">Título profesional de pregrado</small>
+            </div>
+            <div class="col-md-4">
+                <span class="badge bg-info me-2">Técnico Superior</span>
+                <small class="text-muted">Formación técnica especializada</small>
+            </div>
+            <div class="col-md-4">
+                <span class="badge bg-warning me-2">Técnico Medio</span>
+                <small class="text-muted">Formación técnica básica</small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Auto-submit del formulario cuando cambian los selects (opcional)
+    document.addEventListener('DOMContentLoaded', function() {
+        const sedeSelect = document.querySelector('select[name="sede"]');
+        const facultadSelect = document.querySelector('select[name="facultad"]');
+        
+        // Comentado para que no se auto-envíe, pero puedes habilitarlo si quieres
+        /*
+        sedeSelect.addEventListener('change', function() {
+            this.form.submit();
+        });
+        
+        facultadSelect.addEventListener('change', function() {
+            this.form.submit();
+        });
+        */
+    });
+</script>
 {% endblock %}
