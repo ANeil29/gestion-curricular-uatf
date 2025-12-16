@@ -30,7 +30,7 @@ Pasos de Instalación
 
 Clonar el repositorio
 
-bashgit clone https://github.com/tu-usuario/gestion-curricular-uatf.git
+bashgit clone https://github.com/ANeil29/gestion-curricular-uatf.git
 cd gestion-curricular-uatf
 
 Crear y activar entorno virtual
